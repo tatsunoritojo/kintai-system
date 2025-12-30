@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生徒マスタ管理 - 勤怠管理システム</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>勤怠管理システム
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard"><i
+                                class="fas fa-home me-1"></i>ダッシュボード</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employees"><i
+                                class="fas fa-users me-1"></i>従業員管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/work-records"><i
+                                class="fas fa-calendar-alt me-1"></i>勤務記録</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/payrolls"><i
+                                class="fas fa-dollar-sign me-1"></i>給与計算</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown"><i
+                                class="fas fa-cogs me-1"></i>マスタ管理</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/hourly-wages"><i
+                                        class="fas fa-yen-sign me-2"></i>単価マスタ</a></li>
+                            <li><a class="dropdown-item active" href="/students"><i
+                                        class="fas fa-user-graduate me-2"></i>生徒マスタ</a></li>
+                            <li><a class="dropdown-item" href="/work-types"><i
+                                        class="fas fa-briefcase me-2"></i>勤務形態</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/admin/batch"><i
+                                        class="fas fa-sync-alt me-2"></i>バッチ実行</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ロール表示バナー -->
+    <div class="bg-warning text-dark py-2 text-center">
+        <i class="fas fa-shield-alt me-2"></i><strong>管理者モード</strong> - すべての機能にアクセスできます
+    </div>
+
+    <main class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">
+                <i class="fas fa-user-graduate me-2"></i>生徒マスタ管理
+            </h1>
+            <a href="/students/new" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>新規登録
+            </a>
+        </div>
+
+        <div class="alert alert-success" th:if="${message}" th:text="${message}"></div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select class="form-select">
+                            <option>全学年</option>
+                            <option>中学生</option>
+                            <option>高校生</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select">
+                            <option>全ステータス</option>
+                            <option>在籍中</option>
+                            <option>退塾</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>生徒名</th>
+                                <th>学年</th>
+                                <th>学校</th>
+                                <th>ステータス</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student : ${students}">
+                                <td th:text="${student.name}">山田 花子</td>
+                                <td th:text="${student.level}">中学3年</td>
+                                <td th:text="${student.school}">第一中学校</td>
+                                <td>
+                                    <span th:if="${student.status == 'ACTIVE'}" class="badge bg-success">在籍中</span>
+                                    <span th:unless="${student.status == 'ACTIVE'}" class="badge bg-secondary">退塾</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/students/{id}/edit(id=${student.id})}"
+                                        class="btn btn-sm btn-warning text-white">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <p class="mb-0">&copy; 2024 勤怠管理システム</p>
+    </footer>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+
+</html>

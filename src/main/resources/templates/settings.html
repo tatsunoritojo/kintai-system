@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 - 勤怠管理システム</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>
+                勤怠管理システム
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-home me-1"></i>ダッシュボード
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${userRole == 'ADMIN'}">
+                        <a class="nav-link" href="/employees">
+                            <i class="fas fa-users me-1"></i>従業員管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/work-records">
+                            <i class="fas fa-calendar-alt me-1"></i>勤務記録
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/payrolls">
+                            <i class="fas fa-dollar-sign me-1"></i>給与計算
+                        </a>
+                    </li>
+                    <!-- 管理者専用メニュー -->
+                    <li class="nav-item dropdown" th:if="${userRole == 'ADMIN'}">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs me-1"></i>マスタ管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/hourly-wages"><i
+                                        class="fas fa-yen-sign me-2"></i>単価マスタ</a></li>
+                            <li><a class="dropdown-item" href="/students"><i
+                                        class="fas fa-user-graduate me-2"></i>生徒マスタ</a></li>
+                            <li><a class="dropdown-item" href="/work-types"><i
+                                        class="fas fa-briefcase me-2"></i>勤務形態</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/admin/batch"><i
+                                        class="fas fa-sync-alt me-2"></i>バッチ実行</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- ロール切り替えボタン（プロトタイプ用） -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-sm"
+                            th:classappend="${userRole == 'ADMIN'} ? 'btn-warning' : 'btn-outline-light'"
+                            href="/switch-role">
+                            <i class="fas fa-exchange-alt me-1"></i>
+                            <span th:text="${userRole}">ADMIN</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="userMenu" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span th:text="${userName}">ユーザー</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item active" href="/settings"><i class="fas fa-cog me-2"></i>設定</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/login"><i class="fas fa-sign-out-alt me-2"></i>ログアウト</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ロール表示バナー -->
+    <div th:if="${userRole == 'ADMIN'}" class="bg-warning text-dark py-2 text-center">
+        <i class="fas fa-shield-alt me-2"></i><strong>管理者モード</strong> - すべての機能にアクセスできます
+    </div>
+    <div th:unless="${userRole == 'ADMIN'}" class="bg-info text-white py-2 text-center">
+        <i class="fas fa-user me-2"></i><strong>従業員モード</strong> - 個人の勤務記録と給与のみ表示
+    </div>
+
+    <!-- Main Content -->
+    <main class="container py-4">
+        <h1 class="page-title mb-4">
+            <i class="fas fa-cog me-2"></i>
+            <span th:text="${userRole == 'ADMIN'} ? 'システム設定（管理者）' : '個人設定'">設定</span>
+        </h1>
+
+        <div class="row">
+            <!-- アカウント設定（共通） -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-user me-2"></i>アカウント設定
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">表示名</label>
+                            <input type="text" class="form-control" th:value="${userName}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">メールアドレス</label>
+                            <input type="email" class="form-control" value="tanaka@example.com" readonly>
+                        </div>
+                        <button class="btn btn-primary">設定を保存</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- システム情報（共通） -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>システム情報
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <th>バージョン</th>
+                                <td>0.0.1-SNAPSHOT (プロトタイプ)</td>
+                            </tr>
+                            <tr>
+                                <th>環境</th>
+                                <td>Development</td>
+                            </tr>
+                            <tr>
+                                <th>ログインモード</th>
+                                <td>
+                                    <span th:if="${userRole == 'ADMIN'}" class="badge bg-warning text-dark">管理者</span>
+                                    <span th:unless="${userRole == 'ADMIN'}" class="badge bg-info">従業員</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>サーバー時刻</th>
+                                <td id="serverTime">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 以下は管理者専用 -->
+            <div th:if="${userRole == 'ADMIN'}" class="col-12">
+                <hr>
+                <h4 class="mb-3"><i class="fas fa-shield-alt me-2"></i>管理者専用設定</h4>
+            </div>
+
+            <!-- Google連携設定（管理者のみ） -->
+            <div th:if="${userRole == 'ADMIN'}" class="col-md-6 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fab fa-google me-2"></i>Google API連携
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h6>Googleカレンダー</h6>
+                            <div class="d-flex align-items-center">
+                                <span th:if="${googleCalendarConnected}" class="badge bg-success me-2">接続済み</span>
+                                <span th:unless="${googleCalendarConnected}" class="badge bg-secondary me-2">未接続</span>
+                                <button class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-link me-1"></i>接続する
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <h6>Googleスプレッドシート</h6>
+                            <div class="d-flex align-items-center">
+                                <span th:if="${googleSheetsConnected}" class="badge bg-success me-2">接続済み</span>
+                                <span th:unless="${googleSheetsConnected}" class="badge bg-secondary me-2">未接続</span>
+                                <button class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-link me-1"></i>接続する
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- スプレッドシート連携先設定（管理者のみ） -->
+            <div th:if="${userRole == 'ADMIN'}" class="col-md-6 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-table me-2"></i>スプレッドシート連携先
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">生徒情報や従業員情報を自動同期するスプレッドシートを登録できます。</p>
+
+                        <!-- 登録済みスプレッドシート一覧 -->
+                        <div class="list-group mb-3">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-graduate me-2 text-primary"></i>
+                                    <strong>生徒マスタ</strong>
+                                    <br><small class="text-muted">https://docs.google.com/spreadsheets/d/1abc...</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success me-2">接続中</span>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-users me-2 text-info"></i>
+                                    <strong>従業員マスタ</strong>
+                                    <br><small class="text-muted">https://docs.google.com/spreadsheets/d/2def...</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success me-2">接続中</span>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 新規追加フォーム -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="fas fa-plus me-2"></i>新しいスプレッドシートを追加</h6>
+                                <div class="mb-2">
+                                    <label class="form-label">種別</label>
+                                    <select class="form-select form-select-sm">
+                                        <option>生徒マスタ</option>
+                                        <option>従業員マスタ</option>
+                                        <option>勤務記録</option>
+                                        <option>その他</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">スプレッドシートURL</label>
+                                    <input type="url" class="form-control form-control-sm"
+                                        placeholder="https://docs.google.com/spreadsheets/d/...">
+                                </div>
+                                <button class="btn btn-sm btn-primary w-100">
+                                    <i class="fas fa-plus me-1"></i>追加
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 同期設定（管理者のみ） -->
+            <div th:if="${userRole == 'ADMIN'}" class="col-md-6 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-sync-alt me-2"></i>自動同期設定
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">自動同期間隔</label>
+                            <select class="form-select">
+                                <option value="15">15分ごと</option>
+                                <option value="30">30分ごと</option>
+                                <option value="60" selected>1時間ごと</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">最終同期日時</label>
+                            <input type="text" class="form-control" value="2024-01-15 10:00:00" readonly>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-1"></i>今すぐ同期
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 勤怠管理システム - All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        document.getElementById('serverTime').textContent = new Date().toLocaleString('ja-JP');
+    </script>
+</body>
+
+</html>

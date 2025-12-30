@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与明細 - 勤怠管理システム</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>
+                勤怠管理システム
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-home me-1"></i>ダッシュボード
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/employees">
+                            <i class="fas fa-users me-1"></i>従業員管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/work-records">
+                            <i class="fas fa-calendar-alt me-1"></i>勤務記録
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/payrolls">
+                            <i class="fas fa-dollar-sign me-1"></i>給与計算
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span>ユーザー</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>設定</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/login"><i class="fas fa-sign-out-alt me-2"></i>ログアウト</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title mb-0">
+                <i class="fas fa-file-invoice me-2"></i>給与明細詳細
+            </h1>
+            <div>
+                <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i>印刷
+                </button>
+                <a href="/payrolls" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>一覧へ戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h4 class="mb-0" th:text="${payroll.employeeName} + ' 様'">田中 太郎 様</h4>
+                    </div>
+                    <div class="col-md-6 text-md-end text-muted">
+                        対象期間: <span th:text="${#temporals.format(payroll.startDate, 'yyyy年MM月dd日')}">2024年01月01日</span>
+                        〜 <span th:text="${#temporals.format(payroll.endDate, 'yyyy年MM月dd日')}">2024年01月31日</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 支給額サマリー -->
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-muted small">総支給額</div>
+                            <div class="h2 text-primary fw-bold mb-0"
+                                th:text="'¥' + ${#numbers.formatInteger(payroll.totalPayment, 0, 'COMMA')}">¥252,000
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-muted small">総労働時間</div>
+                            <div class="h2 mb-0" th:text="${payroll.totalWorkHours} + '時間'">168.0時間</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-muted small">勤務日数</div>
+                            <div class="h2 mb-0" th:text="${payroll.summary.totalWorkDays} + '日'">21日</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- 内訳 -->
+                <h5 class="mb-3">支給内訳</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>項目</th>
+                                <th>時間数</th>
+                                <th>単価 (概算)</th>
+                                <th>金額</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>基本給（通常勤務）</td>
+                                <td th:text="${payroll.summary.regularHours} + 'h'">160.0h</td>
+                                <td>¥1,500</td>
+                                <td class="text-end"
+                                    th:text="'¥' + ${#numbers.formatInteger(payroll.summary.regularPayment, 0, 'COMMA')}">
+                                    ¥240,000</td>
+                            </tr>
+                            <tr>
+                                <td>残業手当</td>
+                                <td th:text="${payroll.summary.overtimeHours} + 'h'">8.0h</td>
+                                <td>¥1,875</td>
+                                <td class="text-end"
+                                    th:text="'¥' + ${#numbers.formatInteger(payroll.summary.overtimePayment, 0, 'COMMA')}">
+                                    ¥12,000</td>
+                            </tr>
+                            <tr class="table-primary fw-bold">
+                                <td colspan="3" class="text-end">合計</td>
+                                <td class="text-end"
+                                    th:text="'¥' + ${#numbers.formatInteger(payroll.totalPayment, 0, 'COMMA')}">¥252,000
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 勤務履歴 -->
+                <h5 class="mb-3">勤務履歴（抜粋）</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>開始</th>
+                                <th>終了</th>
+                                <th>時間</th>
+                                <th>種別</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="record : ${payroll.workRecords}">
+                                <td th:text="${#temporals.format(record.workDate, 'MM/dd (E)')}">01/05 (金)</td>
+                                <td th:text="${#temporals.format(record.startTime, 'HH:mm')}">09:00</td>
+                                <td th:text="${#temporals.format(record.endTime, 'HH:mm')}">18:00</td>
+                                <td th:text="${record.workHours} + 'h'">8.0h</td>
+                                <td th:text="${record.workTypeName}">通常勤務</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 勤怠管理システム - All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+
+</html>

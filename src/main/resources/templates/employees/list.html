@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>従業員一覧 - 勤怠管理システム</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>
+                勤怠管理システム
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-home me-1"></i>ダッシュボード
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees">
+                            <i class="fas fa-users me-1"></i>従業員管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/work-records">
+                            <i class="fas fa-calendar-alt me-1"></i>勤務記録
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/payrolls">
+                            <i class="fas fa-dollar-sign me-1"></i>給与計算
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span>ユーザー</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>設定</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/login"><i class="fas fa-sign-out-alt me-2"></i>ログアウト</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h1 class="page-title">
+                    <i class="fas fa-users me-2"></i>
+                    従業員一覧
+                </h1>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="/employees/new" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    新規登録
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- 検索フィルター -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" placeholder="従業員番号・名前で検索...">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select">
+                                    <option value="">すべてのステータス</option>
+                                    <option value="ACTIVE">在籍中</option>
+                                    <option value="INACTIVE">退職済み</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>検索
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 従業員テーブル -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>従業員番号</th>
+                                        <th>名前</th>
+                                        <th>メールアドレス</th>
+                                        <th>ステータス</th>
+                                        <th>登録日</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="employee : ${employees}">
+                                        <td th:text="${employee.employeeNumber}">EMP001</td>
+                                        <td>
+                                            <a th:href="@{/employees/{id}(id=${employee.id})}"
+                                               class="text-decoration-none">
+                                                <i class="fas fa-user me-2"></i>
+                                                <span th:text="${employee.name}">田中 太郎</span>
+                                            </a>
+                                        </td>
+                                        <td th:text="${employee.email}">tanaka@example.com</td>
+                                        <td>
+                                            <span th:if="${employee.status == 'ACTIVE'}"
+                                                  class="badge bg-success">在籍中</span>
+                                            <span th:if="${employee.status == 'INACTIVE'}"
+                                                  class="badge bg-secondary">退職済み</span>
+                                        </td>
+                                        <td th:text="${#temporals.format(employee.createdAt, 'yyyy-MM-dd')}">2024-01-15</td>
+                                        <td class="action-buttons">
+                                            <a th:href="@{/employees/{id}(id=${employee.id})}"
+                                               class="btn btn-sm btn-info text-white"
+                                               title="詳細">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/employees/{id}/edit(id=${employee.id})}"
+                                               class="btn btn-sm btn-warning text-white"
+                                               title="編集">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-danger"
+                                                    title="削除">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ページネーション -->
+                        <nav>
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 勤怠管理システム - All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

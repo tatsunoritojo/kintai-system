@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボード - 勤怠管理システム</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>
+                勤怠管理システム
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">
+                            <i class="fas fa-home me-1"></i>ダッシュボード
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${dashboard.userRole == 'ADMIN'}">
+                        <a class="nav-link" href="/employees">
+                            <i class="fas fa-users me-1"></i>従業員管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/work-records">
+                            <i class="fas fa-calendar-alt me-1"></i>勤務記録
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/payrolls">
+                            <i class="fas fa-dollar-sign me-1"></i>給与計算
+                        </a>
+                    </li>
+                    <!-- 管理者専用メニュー -->
+                    <li class="nav-item dropdown" th:if="${dashboard.userRole == 'ADMIN'}">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs me-1"></i>マスタ管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/hourly-wages"><i
+                                        class="fas fa-yen-sign me-2"></i>単価マスタ</a></li>
+                            <li><a class="dropdown-item" href="/students"><i
+                                        class="fas fa-user-graduate me-2"></i>生徒マスタ</a></li>
+                            <li><a class="dropdown-item" href="/work-types"><i
+                                        class="fas fa-briefcase me-2"></i>勤務形態</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/admin/batch"><i
+                                        class="fas fa-sync-alt me-2"></i>バッチ実行</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- ロール切り替えボタン（プロトタイプ用） -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-sm"
+                            th:classappend="${dashboard.userRole == 'ADMIN'} ? 'btn-warning' : 'btn-outline-light'"
+                            href="/switch-role">
+                            <i class="fas fa-exchange-alt me-1"></i>
+                            <span th:text="${dashboard.userRole}">ADMIN</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span th:text="${dashboard.userName}">ユーザー</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>設定</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/login"><i class="fas fa-sign-out-alt me-2"></i>ログアウト</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ロール表示バナー -->
+    <div th:if="${dashboard.userRole == 'ADMIN'}" class="bg-warning text-dark py-2 text-center">
+        <i class="fas fa-shield-alt me-2"></i><strong>管理者モード</strong> - すべての機能にアクセスできます
+    </div>
+    <div th:unless="${dashboard.userRole == 'ADMIN'}" class="bg-info text-white py-2 text-center">
+        <i class="fas fa-user me-2"></i><strong>従業員モード</strong> - 個人の勤務記録と給与のみ表示
+    </div>
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="page-title">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    ダッシュボード
+                </h1>
+            </div>
+        </div>
+
+        <!-- 月次統計 -->
+        <div class="row mb-4">
+            <div th:classappend="${dashboard.userRole == 'ADMIN'} ? 'col-md-2' : 'col-md-3'" class="mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number" th:text="${dashboard.monthlyStats.totalWorkHours} + '時間'">160時間</div>
+                        <div class="stats-label" th:text="${dashboard.userRole == 'ADMIN'} ? '全員の勤務時間' : '今月の勤務時間'">
+                            今月の勤務時間</div>
+                    </div>
+                </div>
+            </div>
+            <div th:classappend="${dashboard.userRole == 'ADMIN'} ? 'col-md-2' : 'col-md-3'" class="mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number" th:text="${dashboard.monthlyStats.totalWorkDays} + '日'">21日</div>
+                        <div class="stats-label" th:text="${dashboard.userRole == 'ADMIN'} ? '全員の勤務日数' : '今月の勤務日数'">
+                            今月の勤務日数</div>
+                    </div>
+                </div>
+            </div>
+            <div th:classappend="${dashboard.userRole == 'ADMIN'} ? 'col-md-3' : 'col-md-3'" class="mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number"
+                            th:text="'¥' + ${#numbers.formatInteger(dashboard.monthlyStats.estimatedPayment, 0, 'COMMA')}">
+                            ¥240,000</div>
+                        <div class="stats-label" th:text="${dashboard.userRole == 'ADMIN'} ? '全員の給与合計' : '今月の推定給与'">
+                            今月の推定給与</div>
+                    </div>
+                </div>
+            </div>
+            <!-- ADMIN専用: 従業員数 -->
+            <div class="col-md-2 mb-3" th:if="${dashboard.userRole == 'ADMIN'}">
+                <div class="card stats-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="stats-number" th:text="${dashboard.employeeCount} + '名'">4名</div>
+                        <div class="stats-label">従業員数</div>
+                    </div>
+                </div>
+            </div>
+            <div th:classappend="${dashboard.userRole == 'ADMIN'} ? 'col-md-3' : 'col-md-3'" class="mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number" th:text="${dashboard.monthlyStats.month}">2024年1月</div>
+                        <div class="stats-label">対象月</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 最近の勤務記録 -->
+            <div class="col-lg-8 mb-4">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-history me-2"></i>
+                        最近の勤務記録
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>日付</th>
+                                        <th>勤務時間</th>
+                                        <th>時間数</th>
+                                        <th>種別</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="record : ${dashboard.recentWorkRecords}">
+                                        <td th:text="${#temporals.format(record.workDate, 'yyyy-MM-dd (E)')}">2024-01-15
+                                            (月)</td>
+                                        <td>
+                                            <span th:text="${#temporals.format(record.startTime, 'HH:mm')}">09:00</span>
+                                            ~
+                                            <span th:text="${#temporals.format(record.endTime, 'HH:mm')}">18:00</span>
+                                        </td>
+                                        <td th:text="${record.workHours} + '時間'">8.0時間</td>
+                                        <td>
+                                            <span class="badge bg-primary" th:text="${record.workTypeName}">通常勤務</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="/work-records" class="btn btn-sm btn-outline-primary">
+                            すべて表示 <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 通知 -->
+            <div class="col-lg-4 mb-4">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-bell me-2"></i>
+                        通知
+                    </div>
+                    <div class="card-body">
+                        <div th:each="notification : ${dashboard.notifications}"
+                            th:class="'notification-item ' + ${notification.type}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <i class="fas fa-info-circle me-2" th:if="${notification.type == 'info'}"></i>
+                                    <i class="fas fa-check-circle me-2" th:if="${notification.type == 'success'}"></i>
+                                    <i class="fas fa-exclamation-triangle me-2"
+                                        th:if="${notification.type == 'warning'}"></i>
+                                    <span th:text="${notification.message}">通知メッセージ</span>
+                                </div>
+                                <small class="text-muted" th:text="${notification.timestamp}">1時間前</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- クイックアクション -->
+                <div class="card mt-3 fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-bolt me-2"></i>
+                        クイックアクション
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/work-records/new" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>勤務記録を登録
+                            </a>
+                            <a href="/payrolls/calculate" class="btn btn-success">
+                                <i class="fas fa-calculator me-2"></i>給与を計算
+                            </a>
+                            <a href="/employees/new" class="btn btn-info text-white">
+                                <i class="fas fa-user-plus me-2"></i>従業員を追加
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 勤怠管理システム - All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+
+</html>

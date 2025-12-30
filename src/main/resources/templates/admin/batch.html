@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バッチ実行管理 - 勤怠管理システム</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>勤怠管理システム
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard"><i
+                                class="fas fa-home me-1"></i>ダッシュボード</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employees"><i
+                                class="fas fa-users me-1"></i>従業員管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/work-records"><i
+                                class="fas fa-calendar-alt me-1"></i>勤務記録</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/payrolls"><i
+                                class="fas fa-dollar-sign me-1"></i>給与計算</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown"><i
+                                class="fas fa-cogs me-1"></i>マスタ管理</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/hourly-wages"><i
+                                        class="fas fa-yen-sign me-2"></i>単価マスタ</a></li>
+                            <li><a class="dropdown-item" href="/students"><i
+                                        class="fas fa-user-graduate me-2"></i>生徒マスタ</a></li>
+                            <li><a class="dropdown-item" href="/work-types"><i
+                                        class="fas fa-briefcase me-2"></i>勤務形態</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item active" href="/admin/batch"><i
+                                        class="fas fa-sync-alt me-2"></i>バッチ実行</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ロール表示バナー -->
+    <div class="bg-warning text-dark py-2 text-center">
+        <i class="fas fa-shield-alt me-2"></i><strong>管理者モード</strong> - すべての機能にアクセスできます
+    </div>
+
+    <main class="container-fluid py-4">
+        <h1 class="page-title mb-4">
+            <i class="fas fa-sync-alt me-2"></i>バッチ実行管理
+        </h1>
+
+        <div class="alert alert-success" th:if="${message}" th:text="${message}"></div>
+
+        <div class="row">
+            <!-- バッチ実行ボタン -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <i class="fab fa-google me-2"></i>Googleカレンダー同期
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Googleカレンダーから勤務記録を同期します。</p>
+                        <p><strong>最終実行:</strong> <span th:text="${lastCalendarSync}">2024-01-15 10:00:00</span></p>
+                        <form action="/admin/batch/sync-calendar" method="post">
+                            <button type="submit" class="btn btn-info text-white w-100">
+                                <i class="fas fa-sync-alt me-2"></i>今すぐ同期
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-calculator me-2"></i>給与計算
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">指定月の給与を一括計算します。</p>
+                        <p><strong>最終実行:</strong> <span th:text="${lastPayrollCalc}">2024-01-15 06:00:00</span></p>
+                        <form action="/admin/batch/calculate-payroll" method="post">
+                            <div class="mb-2">
+                                <input type="month" name="targetMonth" class="form-control" value="2024-01" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-play me-2"></i>計算実行
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-table me-2"></i>スプレッドシート同期
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Googleスプレッドシートから生徒情報を同期します。</p>
+                        <p><strong>最終実行:</strong> 2024-01-14 12:00:00</p>
+                        <form action="/admin/batch/sync-spreadsheet" method="post">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="fas fa-sync-alt me-2"></i>今すぐ同期
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 実行ログ -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-history me-2"></i>実行ログ
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>実行日時</th>
+                                <th>種別</th>
+                                <th>ステータス</th>
+                                <th>メッセージ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${batchLogs}">
+                                <td th:text="${log.timestamp}">2024-01-15 10:00:00</td>
+                                <td th:text="${log.type}">カレンダー同期</td>
+                                <td>
+                                    <span th:if="${log.status == 'SUCCESS'}" class="badge bg-success">成功</span>
+                                    <span th:if="${log.status == 'FAILED'}" class="badge bg-danger">失敗</span>
+                                    <span th:if="${log.status == 'RUNNING'}" class="badge bg-info">実行中</span>
+                                </td>
+                                <td th:text="${log.message}">5件の勤務記録を同期しました</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <p class="mb-0">&copy; 2024 勤怠管理システム</p>
+    </footer>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+
+</html>

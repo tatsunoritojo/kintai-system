@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isNew} ? '従業員登録 - 勤怠管理システム' : '従業員編集 - 勤怠管理システム'">従業員登録 - 勤怠管理システム</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/all.min.css}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-clock me-2"></i>
+                勤怠管理システム
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-home me-1"></i>ダッシュボード
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees">
+                            <i class="fas fa-users me-1"></i>従業員管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/work-records">
+                            <i class="fas fa-calendar-alt me-1"></i>勤務記録
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/payrolls">
+                            <i class="fas fa-dollar-sign me-1"></i>給与計算
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span>ユーザー</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>設定</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/login"><i class="fas fa-sign-out-alt me-2"></i>ログアウト</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0" th:text="${isNew} ? '従業員登録' : '従業員編集'">従業員登録</h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/employees}" th:object="${employee}" method="post">
+                            <div class="mb-3">
+                                <label for="employeeNumber" class="form-label">従業員番号</label>
+                                <input type="text" class="form-control" id="employeeNumber" th:field="*{employeeNumber}"
+                                    required>
+                                <div class="form-text">社員番号などを入力してください。</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="name" class="form-label">名前</label>
+                                <input type="text" class="form-control" id="name" th:field="*{name}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">メールアドレス</label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="status" class="form-label">ステータス</label>
+                                <select class="form-select" id="status" th:field="*{status}">
+                                    <option value="ACTIVE">在籍中</option>
+                                    <option value="INACTIVE">退職済み</option>
+                                </select>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- ここにGoogle連携設定などを追加予定 -->
+                            <div class="alert alert-secondary">
+                                <i class="fas fa-cog me-2"></i>
+                                給与単価や勤務形態の設定は、登録後に詳細画面から設定できます。
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/employees" class="btn btn-secondary me-md-2">キャンセル</a>
+                                <button type="submit" class="btn btn-primary">保存</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 勤怠管理システム - All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+
+</html>

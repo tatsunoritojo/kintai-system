@@ -1,0 +1,1367 @@
+  プロジェクト概要
+
+  勤怠管理システム（給与自動計算）
+  - Googleカレンダーと連携して勤務時間を自動取得
+  - Googleスプレッドシートから生徒情報を同期
+  - 時給ベースの給与を自動計算するバックエンドシステム
+
+  技術スタック
+
+  - 言語: Java 17
+  - フレームワーク: Spring Boot 3.2.x
+  - データベース: PostgreSQL (Docker)
+  - 認証: OAuth 2.0 (Google)
+  - ビルドツール: Maven
+
+  主要機能
+
+  1. Google OAuth 2.0認証 - ユーザーのGoogleアカウントで認証
+  2. 自動同期 - Googleカレンダーとスプレッドシートから定期的にデータ取得
+  3. 動的給与計算 - 勤務形態と生徒の学校種別に応じた単価で計算
+  4. RESTful API - CRUD操作、ページネーション、ソート対応
+  5. 給与レポート出力 - JSON形式でレポート生成
+
+  データベース設計
+
+  6つの主要テーブル:
+  - employees - 従業員情報
+  - work_records - 勤務記録
+  - work_types - 勤務形態
+  - students - 生徒情報
+  - student_levels - 学校種別
+  - hourly_wages - 時給マスタ
+
+  設計書は非常によくまとまっています。実装に着手する準備ができていますね。何か特定の部分について質
+問や、実装を始めたい場合はお知らせください。
+
+> 設計書への評価，ありがとうございます
+こちらは，事業に必要なプログラムですので，厳密に設計します
+また，私の開発経験として，プロフェッショナルなエンジニアが見てもおかしくないような手順で何もかもを
+行いたいと考えてい
+ます
+それらの視点を基に，もう一度細部まで読み込み，問題点や改善点，むしろよく設計している点などについて
+提案ベースでさらな
+る設計をしていきます
+
+● 承知しました。事業用の本番システムとして、プロフェッショナルな視点で徹底的にレビューします。
+
+● プロフェッショナルな観点から、徹底的にレビューを実施します。以下、詳細な分析結果をお伝えします。
+
+  ---
+  設計書総合レビュー報告書
+
+  📋 1. 要件定義書のレビュー
+
+  ✅ 優れている点
+
+  1. スコープの明確化: In-Scope/Out-of-Scopeが明示され、フェーズ分けも適切
+  2. 要件のID管理: FR/NFRに識別子が付与され、トレーサビリティが確保されている
+  3. 段階的な拡張計画: フェーズ2以降の展望が示されている
+
+  ⚠️ 重大な欠落事項
+
+  1.1. データ管理要件の不足
+
+  【追加すべき要件】
+  - データ保持期間ポリシー（給与データは何年保管？）
+  - バックアップ・リカバリ要件（RPO/RTO）
+  - データ削除ポリシー（退職者、卒業生のデータ）
+  - 個人情報保護対応（GDPR、個人情報保護法への準拠）
+
+  1.2. セキュリティ要件の不足
+
+  【追加すべき要件】
+  NFR-005: アクセス制御
+    - ロールベースアクセス制御（RBAC）の実装
+    - 管理者/一般ユーザーの権限分離
+
+  NFR-006: 監査ログ
+    - すべての給与計算、データ変更操作の監査ログ記録
+    - ログの改ざん防止、最低5年間の保管
+
+  NFR-007: データ保護
+    - データベース暗号化（at rest）
+    - 個人情報フィールドの暗号化
+    - トークン情報の安全な保管（Vault等）
+
+  1.3. 可用性・信頼性要件の不足
+
+  【追加すべき要件】
+  NFR-008: 可用性
+    - システム稼働率目標（例: 99.5%）
+    - 計画メンテナンス時間の定義
+
+  NFR-009: 障害対応
+    - Google API障害時の挙動（リトライ戦略）
+    - 部分的な障害時の縮退運転
+
+  NFR-010: 同時実行性
+    - 同時ログインユーザー数の上限
+    - APIリクエストのレート制限
+
+  1.4. 運用要件の不足
+
+  【追加すべき要件】
+  NFR-011: 監視・通知
+    - システムヘルスチェック要件
+    - 異常検知時のアラート通知
+    - バッチ処理失敗時の通知
+
+  NFR-012: ログ管理
+    - ログレベルの定義（ERROR/WARN/INFO/DEBUG）
+    - ログ保持期間
+    - 個人情報のマスキング要件
+
+  🔍 曖昧な表現の明確化が必要
+
+  | 箇所                              | 問題点                       | 改善案
+            |
+  |-----------------------------------|------------------------------|-----------------------------
+------------|
+  | FR-002: "定期的（例:1時間に1回）" | 本番環境での実行頻度が未確定 |
+「毎時0分に実行」など具体的に定義       |
+  | FR-004: "最大拘束6時間"           | 超過時の処理が不明           |
+超過時のバリデーション、警告出力を定義  |
+  | FR-002: "重複登録は防止する"      | 判定基準が曖昧               |
+google_event_idによるユニーク制約を明示 |
+
+  ---
+  🏗️ 2. アーキテクチャ設計書のレビュー
+
+  ✅ 優れている点
+
+  1. レイヤー分離: API層、ビジネスロジック層、データアクセス層の分離が明確
+  2. 図の活用: Mermaidによる視覚化で理解しやすい
+  3. 技術選定の妥当性: Spring Boot、PostgreSQLは実績があり適切
+
+  ⚠️ アーキテクチャ上の重大な欠落
+
+  2.1. データベース設計の詳細不足
+
+  現在のER図に不足しているもの:
+
+  -- employees テーブルに追加すべきカラム
+  ALTER TABLE employees ADD COLUMN (
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',  -- 'ADMIN', 'USER'
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    google_refresh_token TEXT,  -- 暗号化して保存
+    last_synced_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  -- work_records テーブルに追加すべきカラム
+  ALTER TABLE work_records ADD COLUMN (
+    work_type_id INTEGER REFERENCES work_types(id),  -- キーワード推論だけでなく明示的に保存
+    student_id INTEGER REFERENCES students(id),  -- 名前抽出だけでなくIDで関連付け
+    extracted_student_name TEXT,  -- カレンダーから抽出した生徒名（参考用）
+    calculated_minutes INTEGER,  -- キャッシュして再計算を避ける
+    is_paid BOOLEAN NOT NULL DEFAULT FALSE,  -- 給与支払済みフラグ
+    notes TEXT,
+    synced_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  -- すべてのテーブルに監査用カラムを追加
+  ALTER TABLE <table_name> ADD COLUMN (
+    created_by INTEGER REFERENCES employees(id),
+    updated_by INTEGER REFERENCES employees(id)
+  );
+
+  必須インデックス:
+  CREATE INDEX idx_work_records_employee_time ON work_records(employee_id, start_time);
+  CREATE INDEX idx_work_records_google_event ON work_records(google_event_id);
+  CREATE INDEX idx_work_records_payment ON work_records(employee_id, is_paid);
+  CREATE UNIQUE INDEX idx_students_name ON students(name);
+  CREATE INDEX idx_hourly_wages_lookup ON hourly_wages(work_type_id, student_level_id);
+
+  制約の明示:
+  ALTER TABLE work_records ADD CONSTRAINT chk_time_range
+    CHECK (start_time < end_time);
+
+  ALTER TABLE hourly_wages ADD CONSTRAINT chk_positive_wage
+    CHECK (wage > 0);
+
+  2.2. 欠落しているコンポーネント
+
+  追加すべきアーキテクチャ要素:
+
+  graph TD
+      subgraph "追加すべき層"
+          Cache[Redis Cache Layer]
+          Queue[Message Queue - RabbitMQ/SQS]
+          Monitor[Monitoring - Prometheus/Grafana]
+          Logger[Centralized Logging - ELK]
+      end
+
+      API --> Cache
+      BatchJobs --> Queue
+      All[All Components] --> Monitor
+      All --> Logger
+
+  理由:
+  - Redis: 頻繁にアクセスする単価マスタ、従業員情報のキャッシュ
+  - Message Queue: バッチ処理の非同期化、リトライ制御
+  - Monitoring: 本番運用に必須のメトリクス収集
+  - Centralized Logging: 分散ログの集約、検索
+
+  2.3. セキュリティアーキテクチャの詳細化
+
+  現状の問題点:
+  - JWTの保存場所、有効期限、リフレッシュ戦略が未定義
+  - トークン失効（ログアウト）の仕組みがない
+  - CORS、CSRFの対策が未記載
+
+  推奨設計:
+  JWT設計:
+    アクセストークン:
+      有効期限: 15分
+      保存場所: メモリのみ（LocalStorage不可）
+    リフレッシュトークン:
+      有効期限: 7日
+      保存場所: HttpOnly Cookie (Secure, SameSite=Strict)
+      ローテーション: 使用ごとに新規発行
+    失効管理:
+      方式: Redisにブラックリスト保存
+      TTL: トークン有効期限まで
+
+  Google OAuth トークン:
+    リフレッシュトークン:
+      保存: データベース（暗号化必須）
+      暗号化方式: AES-256-GCM
+      鍵管理: AWS KMS / HashiCorp Vault
+
+  ---
+  📝 3. 詳細設計書のレビュー
+
+  ⚠️ APIエンドポイント設計の不足
+
+  3.1. 欠落しているエンドポイント
+
+  // ヘルスチェック・監視用
+  GET /health              // アプリケーション死活監視
+  GET /health/ready        // Kubernetes readiness probe用
+  GET /health/live         // Kubernetes liveness probe用
+  GET /metrics             // Prometheus metrics
+
+  // 認証関連
+  POST /api/v1/auth/login          // OAuth開始
+  POST /api/v1/auth/callback       // OAuth callback
+  POST /api/v1/auth/refresh        // トークンリフレッシュ
+  POST /api/v1/auth/logout         // ログアウト
+
+  // 不足しているCRUD操作
+  PUT  /api/v1/employees/{id}      // 更新
+  DELETE /api/v1/employees/{id}    // 削除（論理削除推奨）
+
+  // バルク操作
+  POST /api/v1/employees/bulk      // 一括登録
+  DELETE /api/v1/employees/bulk    // 一括削除
+
+  // 管理者用
+  GET /api/v1/admin/sync-status    // 同期状態確認
+  GET /api/v1/admin/audit-logs     // 監査ログ取得
+
+  3.2. API設計の改善提案
+
+  現在のPayrollDtoの問題点:
+  {
+    "totalPayment": 216000  // 単位が不明、通貨も不明
+  }
+
+  改善版:
+  {
+    "employee": {
+      "id": 1,
+      "name": "Taro Yamada",
+      "email": "taro@example.com"
+    },
+    "period": {
+      "start": "2025-11-01",
+      "end": "2025-11-30"
+    },
+    "summary": {
+      "totalWorkMinutes": 5400,
+      "totalWorkHours": 90.0,
+      "totalPayment": {
+        "amount": 216000,
+        "currency": "JPY"
+      },
+      "calculatedAt": "2025-12-01T10:00:00Z",
+      "calculatedBy": "admin@example.com"
+    },
+    "paymentDetails": [
+      {
+        "workTypeName": "個別指導",
+        "studentLevelName": "中学生",
+        "recordCount": 12,
+        "totalMinutes": 3600,
+        "totalHours": 60.0,
+        "appliedWage": {
+          "amount": 3000,
+          "currency": "JPY",
+          "unit": "HOUR"
+        },
+        "subtotal": {
+          "amount": 180000,
+          "currency": "JPY"
+        }
+      }
+    ],
+    "warnings": [  // エラーではないが注意すべき事項
+      {
+        "code": "STUDENT_NOT_FOUND",
+        "message": "生徒「B」がマスタに存在しないため、該当記録は計算から除外されました",
+        "affectedRecordIds": [123, 456]
+      }
+    ],
+    "errors": []  // 計算エラーがあればここに記載
+  }
+
+  3.3. エラーレスポンスの標準化
+
+  現在の設計:
+  {
+    "timestamp": "2025-12-29T10:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Employee ID not found"
+  }
+
+  改善版（RFC 7807準拠）:
+  {
+    "type": "https://api.example.com/errors/employee-not-found",
+    "title": "Employee Not Found",
+    "status": 404,
+    "detail": "Employee with ID 999 does not exist in the system",
+    "instance": "/api/v1/employees/999",
+    "timestamp": "2025-12-29T10:00:00Z",
+    "traceId": "abc123xyz",  // 分散トレーシング用
+    "errors": [  // バリデーションエラー時
+      {
+        "field": "email",
+        "code": "INVALID_FORMAT",
+        "message": "Email format is invalid"
+      }
+    ]
+  }
+
+  ---
+  🔒 4. セキュリティ観点での包括的レビュー
+
+  ⚠️ OWASP Top 10 対策状況
+
+  | 脅威                        | 現状                        | 対策必要性  |
+  |-----------------------------|-----------------------------|-------------|
+  | Broken Access Control       | ❌ RBAC未定義               | 🔴 Critical |
+  | Cryptographic Failures      | ❌ トークン保存方法未定義   | 🔴 Critical |
+  | Injection                   | △ JPA使用で一定の対策       | 🟡 要確認   |
+  | Insecure Design             | △ レート制限なし            | 🟡 Medium   |
+  | Security Misconfiguration   | ❌ 設定指針なし             | 🟡 Medium   |
+  | Vulnerable Components       | △ 依存ライブラリ管理未記載  | 🟡 Medium   |
+  | Authentication Failures     | ❌ ログアウト機構なし       | 🔴 Critical |
+  | Software and Data Integrity | ❌ 監査ログなし             | 🟡 Medium   |
+  | Logging Failures            | ❌ ログ戦略未定義           | 🟡 Medium   |
+  | SSRF                        | ✅ Google APIのみで低リスク | 🟢 Low      |
+
+  📋 セキュリティ要件の追加提案
+
+  ## セキュリティ要件詳細
+
+  ### SEC-001: 認証・認可
+  - Spring Security 6 を使用
+  - OAuth 2.0 Authorization Code Flow with PKCE
+  - JWT署名アルゴリズム: RS256（HS256不可）
+  - リフレッシュトークンローテーション必須
+
+  ### SEC-002: アクセス制御
+  - @PreAuthorize アノテーションによるメソッドレベル制御
+  - ADMIN: すべての操作可能
+  - USER: 自分の給与情報のみ閲覧可能
+
+  ### SEC-003: データ保護
+  - DB接続はTLS必須
+  - 個人情報カラム（email等）は暗号化
+  - Google refresh_token は AES-256-GCM で暗号化
+
+  ### SEC-004: 入力検証
+  - すべてのDTOに @Valid 適用
+  - @Email, @NotNull, @Size などのBean Validation使用
+  - カスタムバリデータで業務ロジック検証
+
+  ### SEC-005: レート制限
+  - Bucket4j ライブラリ使用
+  - 認証済みユーザー: 100req/min
+  - 未認証: 10req/min
+
+  ### SEC-006: 監査ログ
+  - Spring Data JPA Auditing 使用
+  - 記録対象: 作成者、更新者、作成日時、更新日時
+  - 給与計算実行ログ（誰が、いつ、誰の給与を計算したか）
+
+  ---
+  🧪 5. 欠落している設計要素
+
+● 5.1. テスト戦略（完全に欠落）
+
+  追加すべきドキュメント: TEST_STRATEGY.md
+
+  # テスト戦略書
+
+  ## テストレベル
+
+  ### 単体テスト (Unit Test)
+  - **ツール**: JUnit 5, Mockito, AssertJ
+  - **カバレッジ目標**: 80%以上（JaCoCo）
+  - **対象**: すべてのService, Repository, Util クラス
+  - **例**:
+    ```java
+    @Test
+    void calculatePayroll_正常系_動的単価適用() {
+        // Given
+        Employee employee = createTestEmployee();
+        List<WorkRecord> records = createTestWorkRecords();
+
+        // When
+        PayrollDto result = payrollService.calculatePayroll(
+            employee.getId(),
+            LocalDate.of(2025, 11, 1),
+            LocalDate.of(2025, 11, 30)
+        );
+
+        // Then
+        assertThat(result.getTotalPayment().getAmount())
+            .isEqualTo(216000);
+    }
+
+  統合テスト (Integration Test)
+
+  - ツール: Spring Boot Test, Testcontainers (PostgreSQL)
+  - 対象: API層 + DB層の結合
+  - 例: REST APIの全エンドポイントをテスト
+
+  E2Eテスト
+
+  - ツール: REST Assured
+  - 対象: 実際のGoogle API連携（テストアカウント使用）
+  - シナリオ例:
+    a. ログイン → カレンダー同期 → 給与計算 → レポート取得
+
+  性能テスト
+
+  - ツール: JMeter / Gatling
+  - 目標: 平均レスポンスタイム 500ms以内（NFR-002）
+  - シナリオ:
+    - 100同時ユーザー、給与計算API呼び出し
+    - バッチ処理の実行時間測定
+
+  セキュリティテスト
+
+  - ツール: OWASP ZAP, SonarQube
+  - 対象:
+    - SQL Injection
+    - XSS
+    - 認証バイパス
+    - 権限昇格
+
+  ---
+
+  ### 5.2. デプロイ・運用戦略（完全に欠落）
+
+  **追加すべきドキュメント: `DEPLOYMENT.md`**
+
+  ```markdown
+  # デプロイメント戦略
+
+  ## 環境構成
+
+  | 環境 | 用途 | データベース | 外部API |
+  |------|------|-------------|---------|
+  | local | 開発者ローカル | H2 in-memory | モック |
+  | dev | 開発統合環境 | PostgreSQL (Docker) | テストアカウント |
+  | staging | 本番前検証 | PostgreSQL (同構成) | テストアカウント |
+  | production | 本番 | PostgreSQL (HA構成) | 本番アカウント |
+
+  ## CI/CD パイプライン
+
+  ```yaml
+  # GitHub Actions例
+  name: CI/CD Pipeline
+
+  on:
+    push:
+      branches: [main, develop]
+    pull_request:
+      branches: [main]
+
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - name: Set up JDK 17
+          uses: actions/setup-java@v3
+        - name: Run tests
+          run: mvn clean verify
+        - name: Upload coverage
+          uses: codecov/codecov-action@v3
+
+    security-scan:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Run OWASP Dependency Check
+          run: mvn dependency-check:check
+        - name: SonarQube Scan
+          run: mvn sonar:sonar
+
+    build-and-deploy:
+      needs: [test, security-scan]
+      if: github.ref == 'refs/heads/main'
+      steps:
+        - name: Build Docker image
+          run: docker build -t attendance-api:${{ github.sha }} .
+        - name: Push to registry
+          run: docker push attendance-api:${{ github.sha }}
+        - name: Deploy to staging
+          run: kubectl apply -f k8s/staging/
+
+  データベースマイグレーション
+
+  ツール: Flyway
+
+  -- V1__initial_schema.sql
+  CREATE TABLE employees (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      role VARCHAR(20) NOT NULL DEFAULT 'USER',
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  -- V2__add_audit_columns.sql
+  ALTER TABLE employees ADD COLUMN created_by INTEGER REFERENCES employees(id);
+  ALTER TABLE employees ADD COLUMN updated_by INTEGER REFERENCES employees(id);
+
+  マイグレーション戦略:
+  - すべてのスキーマ変更はFlywayスクリプトで管理
+  - ロールバック用のUndoスクリプトも作成
+  - 本番デプロイ前にstagingで検証
+
+  監視・アラート
+
+  メトリクス収集: Prometheus + Grafana
+
+  // Spring Boot Actuator設定
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,prometheus
+    metrics:
+      tags:
+        application: attendance-management
+
+  アラート設定例:
+  # Prometheus Alert Rules
+  groups:
+    - name: attendance-api
+      rules:
+        - alert: HighErrorRate
+          expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.05
+          for: 5m
+          annotations:
+            summary: "High error rate detected"
+
+        - alert: CalendarSyncFailed
+          expr: calendar_sync_failures_total > 3
+          for: 10m
+          annotations:
+            summary: "Calendar sync job failing repeatedly"
+
+  ---
+
+  ### 5.3. ログ戦略（完全に欠落）
+
+  **追加すべきドキュメント: `LOGGING.md`**
+
+  ```markdown
+  # ログ戦略
+
+  ## ログレベル定義
+
+  | レベル | 用途 | 例 |
+  |--------|------|-----|
+  | ERROR | 即時対応が必要なエラー | DB接続失敗、Google API認証エラー |
+  | WARN | 注意が必要だが処理は継続 | 生徒マスタに存在しない生徒名、リトライ実行 |
+  | INFO | 重要な業務イベント | ログイン成功、給与計算実行、バッチ開始/終了 |
+  | DEBUG | デバッグ情報 | SQLクエリ、APIレスポンス詳細 |
+
+  ## 構造化ログ（JSON形式）
+
+  ```json
+  {
+    "timestamp": "2025-12-29T10:00:00.123Z",
+    "level": "INFO",
+    "logger": "com.example.attendance.service.PayrollService",
+    "thread": "http-nio-8080-exec-1",
+    "message": "Payroll calculation completed",
+    "context": {
+      "employeeId": 1,
+      "startDate": "2025-11-01",
+      "endDate": "2025-11-30",
+      "totalPayment": 216000,
+      "executionTimeMs": 234
+    },
+    "traceId": "abc123xyz",
+    "spanId": "def456uvw",
+    "userId": "admin@example.com"
+  }
+
+  個人情報のマスキング
+
+  @Component
+  public class SensitiveDataMasker {
+      public String maskEmail(String email) {
+          // user@example.com → u***@example.com
+          return email.replaceAll("(?<=.{1}).(?=.*@)", "*");
+      }
+
+      public String maskName(String name) {
+          // 山田太郎 → 山田**
+          return name.substring(0, 2) + "*".repeat(name.length() - 2);
+      }
+  }
+
+  ログ保持期間
+
+  | 環境       | 保持期間                 | 保存先          |
+  |------------|--------------------------|-----------------|
+  | local      | 1日                      | コンテナ内      |
+  | dev        | 7日                      | CloudWatch Logs |
+  | staging    | 30日                     | CloudWatch Logs |
+  | production | 90日（HOT）+ 5年（COLD） | S3 Glacier      |
+
+
+  ---
+
+  ### 5.4. データ整合性とトランザクション管理（詳細が不足）
+
+  **追加すべき設計:**
+
+  ```java
+  // トランザクション境界の明示
+  @Service
+  @Transactional(readOnly = true)  // デフォルトは読み取り専用
+  public class PayrollService {
+
+      @Transactional  // 書き込みが必要な場合のみ上書き
+      public PayrollDto calculateAndSavePayroll(Integer employeeId,
+                                                 LocalDate start,
+                                                 LocalDate end) {
+          // 1. 給与計算
+          PayrollDto payroll = calculatePayroll(employeeId, start, end);
+
+          // 2. 計算履歴を保存（監査用）
+          PayrollHistory history = new PayrollHistory();
+          history.setEmployeeId(employeeId);
+          history.setCalculatedAt(Instant.now());
+          history.setTotalPayment(payroll.getTotalPayment());
+          payrollHistoryRepository.save(history);
+
+          // 3. 該当する work_records を "支払済み" にマーク
+          workRecordRepository.markAsPaid(employeeId, start, end);
+
+          return payroll;
+      }
+  }
+
+  // 並行制御（楽観的ロック）
+  @Entity
+  public class Employee {
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      private Integer id;
+
+      @Version  // 楽観的ロック用
+      private Integer version;
+
+      // ...
+  }
+
+  // 悲観的ロックが必要な場合
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT e FROM Employee e WHERE e.id = :id")
+  Optional<Employee> findByIdWithLock(@Param("id") Integer id);
+
+  ---
+  5.5. エラーハンドリング戦略（詳細が不足）
+
+  グローバル例外ハンドラ:
+
+  @RestControllerAdvice
+  public class GlobalExceptionHandler {
+
+      @ExceptionHandler(EmployeeNotFoundException.class)
+      public ResponseEntity<ErrorResponse> handleEmployeeNotFound(
+              EmployeeNotFoundException ex,
+              HttpServletRequest request) {
+
+          ErrorResponse error = ErrorResponse.builder()
+              .type("https://api.example.com/errors/employee-not-found")
+              .title("Employee Not Found")
+              .status(404)
+              .detail(ex.getMessage())
+              .instance(request.getRequestURI())
+              .timestamp(Instant.now())
+              .traceId(MDC.get("traceId"))
+              .build();
+
+          return ResponseEntity.status(404).body(error);
+      }
+
+      @ExceptionHandler(GoogleApiException.class)
+      public ResponseEntity<ErrorResponse> handleGoogleApiError(
+              GoogleApiException ex) {
+
+          // Google API障害時は503を返す
+          ErrorResponse error = ErrorResponse.builder()
+              .type("https://api.example.com/errors/external-service-unavailable")
+              .title("External Service Unavailable")
+              .status(503)
+              .detail("Google Calendar API is temporarily unavailable")
+              .retryAfter(300)  // 5分後に再試行
+              .build();
+
+          return ResponseEntity.status(503)
+              .header("Retry-After", "300")
+              .body(error);
+      }
+
+      @ExceptionHandler(MethodArgumentNotValidException.class)
+      public ResponseEntity<ErrorResponse> handleValidationError(
+              MethodArgumentNotValidException ex) {
+
+          List<FieldError> fieldErrors = ex.getBindingResult()
+              .getFieldErrors()
+              .stream()
+              .map(fe -> new FieldError(
+                  fe.getField(),
+                  fe.getCode(),
+                  fe.getDefaultMessage()
+              ))
+              .toList();
+
+          ErrorResponse error = ErrorResponse.builder()
+              .type("https://api.example.com/errors/validation-failed")
+              .title("Validation Failed")
+              .status(400)
+              .detail("Input validation failed")
+              .errors(fieldErrors)
+              .build();
+
+          return ResponseEntity.status(400).body(error);
+      }
+  }
+
+  リトライ戦略:
+
+  @Service
+  public class CalendarSyncService {
+
+      @Retryable(
+          value = {GoogleApiException.class},
+          maxAttempts = 3,
+          backoff = @Backoff(
+              delay = 1000,
+              multiplier = 2,
+              maxDelay = 10000
+          )
+      )
+      public void syncCalendar(Employee employee) {
+          // Google Calendar API呼び出し
+          // 失敗時は指数バックオフで最大3回リトライ
+      }
+
+      @Recover
+      public void recover(GoogleApiException ex, Employee employee) {
+          // 3回リトライしても失敗した場合
+          log.error("Calendar sync failed after retries for employee: {}",
+                    employee.getId(), ex);
+
+          // 管理者にアラート送信
+          alertService.sendAlert(
+              "Calendar sync failed for employee: " + employee.getName()
+          );
+
+          // Dead Letter Queue に保存（後で手動リトライ可能にする）
+          dlqRepository.save(new FailedSyncJob(employee.getId(), ex.getMessage()));
+      }
+  }
+
+  ---
+  📊 6. バッチ処理の詳細設計（不足）
+
+  6.1. CalendarSyncJob の詳細設計
+
+  現在の問題点:
+  - エラーハンドリングが不明確
+  - 実行時間が長くなった場合の対応が未定義
+  - 部分的な失敗時の挙動が未定義
+
+  改善提案:
+
+  @Component
+  @Slf4j
+  public class CalendarSyncJob {
+
+      @Scheduled(cron = "0 0 * * * *")  // 毎時0分に実行
+      @SchedulerLock(
+          name = "CalendarSyncJob",
+          lockAtMostFor = "50m",  // 最大50分でロック解放
+          lockAtLeastFor = "5m"   // 最低5分はロック保持
+      )
+      public void execute() {
+          log.info("Calendar sync job started");
+
+          Instant startTime = Instant.now();
+          int successCount = 0;
+          int failureCount = 0;
+          List<SyncError> errors = new ArrayList<>();
+
+          try {
+              List<Employee> activeEmployees = employeeRepository
+                  .findByIsActiveTrue();
+
+              for (Employee employee : activeEmployees) {
+                  try {
+                      syncEmployeeCalendar(employee);
+                      successCount++;
+                  } catch (Exception ex) {
+                      failureCount++;
+                      errors.add(new SyncError(employee.getId(), ex.getMessage()));
+                      log.error("Failed to sync calendar for employee: {}",
+                                employee.getId(), ex);
+                  }
+              }
+          } finally {
+              Duration duration = Duration.between(startTime, Instant.now());
+
+              // メトリクス記録
+              meterRegistry.counter("calendar_sync.success").increment(successCount);
+              meterRegistry.counter("calendar_sync.failure").increment(failureCount);
+              meterRegistry.timer("calendar_sync.duration").record(duration);
+
+              log.info("Calendar sync job completed. Success: {}, Failure: {}, Duration: {}",
+                       successCount, failureCount, duration);
+
+              // 失敗が多い場合はアラート
+              if (failureCount > activeEmployees.size() * 0.1) {  // 10%以上失敗
+                  alertService.sendAlert(
+                      "Calendar sync job has high failure rate: " + failureCount
+                  );
+              }
+          }
+      }
+
+      private void syncEmployeeCalendar(Employee employee) {
+          // 最後の同期時刻以降のイベントのみ取得
+          Instant lastSync = employee.getLastSyncedAt() != null
+              ? employee.getLastSyncedAt()
+              : Instant.now().minus(30, ChronoUnit.DAYS);
+
+          List<Event> events = googleCalendarService.getEvents(
+              employee,
+              lastSync,
+              Instant.now()
+          );
+
+          int newRecords = 0;
+          int duplicates = 0;
+
+          for (Event event : events) {
+              // キーワードマッチング
+              Optional<WorkType> workType = matchWorkType(event.getSummary());
+              if (workType.isEmpty() || !workType.get().getIsPayrollTarget()) {
+                  continue;
+              }
+
+              // 重複チェック
+              if (workRecordRepository.existsByGoogleEventId(event.getId())) {
+                  duplicates++;
+                  continue;
+              }
+
+              // 生徒名抽出
+              String studentName = extractStudentName(
+                  event.getSummary(),
+                  workType.get().getCalendarKeyword()
+              );
+
+              // WorkRecord作成
+              WorkRecord record = WorkRecord.builder()
+                  .employeeId(employee.getId())
+                  .googleEventId(event.getId())
+                  .eventTitle(event.getSummary())
+                  .startTime(event.getStart().getDateTime())
+                  .endTime(event.getEnd().getDateTime())
+                  .workTypeId(workType.get().getId())
+                  .extractedStudentName(studentName)
+                  .syncedAt(Instant.now())
+                  .build();
+
+              // Student IDの解決（可能であれば）
+              studentRepository.findByName(studentName)
+                  .ifPresent(student -> record.setStudentId(student.getId()));
+
+              workRecordRepository.save(record);
+              newRecords++;
+          }
+
+          // 同期時刻を更新
+          employee.setLastSyncedAt(Instant.now());
+          employeeRepository.save(employee);
+
+          log.info("Synced calendar for employee {}: {} new records, {} duplicates",
+                   employee.getId(), newRecords, duplicates);
+      }
+
+      private Optional<WorkType> matchWorkType(String eventTitle) {
+          List<WorkType> workTypes = workTypeRepository.findAll();
+
+          return workTypes.stream()
+              .filter(wt -> eventTitle.startsWith(wt.getCalendarKeyword()))
+              .findFirst();
+      }
+
+      private String extractStudentName(String eventTitle, String keyword) {
+          // "個別（山田太郎）" → "山田太郎"
+          String pattern = keyword + "\\s*[（(](.+?)[)）]";
+          Pattern regex = Pattern.compile(pattern);
+          Matcher matcher = regex.matcher(eventTitle);
+
+          if (matcher.find()) {
+              return matcher.group(1).trim();
+          }
+
+          return null;
+      }
+  }
+
+  ---
+
+● 📋 7. 総合的な改善提案とアクションプラン
+
+  7.1. 優先度別の改善項目
+
+  🔴 Critical（実装前に必ず対応）
+
+  | 項目                     | 理由                   | 対応内容
+            |
+  |--------------------------|------------------------|--------------------------------------------
+------------|
+  | DB設計の補完             | データ整合性、監査要件 |
+created_at/updated_at/監査カラム追加、インデックス定義 |
+  | セキュリティ要件の明確化 | 個人情報保護、法令遵守 | RBAC、暗号化、監査ログの詳細設計
+            |
+  | エラーハンドリング戦略   | 本番運用の安定性       | 全エラーケースの洗い出しとハンドリング実装
+            |
+  | トークン管理戦略         | セキュリティリスク     | JWT/Refresh tokenの保存・失効方法の決定
+            |
+  | テスト戦略               | 品質保証               | 最低限の単体・統合テストの定義
+            |
+
+  🟡 High（フェーズ1の後半で対応）
+
+  | 項目               | 理由               | 対応内容                                   |
+  |--------------------|--------------------|--------------------------------------------|
+  | 監視・ログ戦略     | 運用効率化         | Prometheus/Grafana導入、アラート設定       |
+  | CI/CDパイプライン  | 開発効率化         | GitHub Actions設定、自動テスト実行         |
+  | API仕様の詳細化    | フロントエンド連携 | OpenAPI (Swagger) 仕様書作成               |
+  | バッチ処理の堅牢化 | 安定運用           | リトライ、エラーハンドリング、部分失敗対応 |
+
+  🟢 Medium（フェーズ2以降で検討）
+
+  | 項目                   | 理由               | 対応内容                          |
+  |------------------------|--------------------|-----------------------------------|
+  | キャッシュ層の導入     | パフォーマンス向上 | Redis導入、単価マスタのキャッシュ |
+  | メッセージキューの導入 | スケーラビリティ   | RabbitMQ/SQS導入、非同期処理化    |
+  | マルチテナント対応     | 将来の拡張         | 複数組織での利用を想定した設計    |
+
+  ---
+  7.2. 推奨する追加ドキュメント
+
+  docs/
+  ├── 01_requirements/
+  │   ├── REQUIREMENTS_DEFINITION.md  (既存)
+  │   ├── SECURITY_REQUIREMENTS.md    (新規追加) ★
+  │   └── DATA_RETENTION_POLICY.md    (新規追加) ★
+  ├── 02_architecture_design/
+  │   ├── ARCHITECTURE_DESIGN.md      (既存)
+  │   ├── DATABASE_DESIGN_DETAIL.md   (新規追加) ★
+  │   └── SECURITY_ARCHITECTURE.md    (新規追加) ★
+  ├── 03_detailed_design/
+  │   ├── DETAILED_DESIGN.md          (既存)
+  │   ├── API_SPECIFICATION.md        (新規追加) ★
+  │   ├── ERROR_HANDLING.md           (新規追加) ★
+  │   └── BATCH_JOB_DESIGN.md         (新規追加) ★
+  ├── 04_operations/                  (新規フォルダ) ★
+  │   ├── DEPLOYMENT.md
+  │   ├── MONITORING.md
+  │   ├── LOGGING.md
+  │   └── RUNBOOK.md
+  ├── 05_testing/                     (新規フォルダ) ★
+  │   ├── TEST_STRATEGY.md
+  │   ├── TEST_CASES.md
+  │   └── PERFORMANCE_TEST.md
+  └── 06_development/                 (新規フォルダ) ★
+      ├── CODING_STANDARDS.md
+      ├── GIT_WORKFLOW.md
+      └── LOCAL_DEVELOPMENT.md
+
+  ---
+  7.3. データベーススキーマの完全版提案
+
+  完全版DDL:
+
+  -- ============================================
+  -- 従業員テーブル
+  -- ============================================
+  CREATE TABLE employees (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      role VARCHAR(20) NOT NULL DEFAULT 'USER' CHECK (role IN ('ADMIN', 'USER')),
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      google_refresh_token_encrypted TEXT,  -- AES-256-GCM暗号化
+      last_synced_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_by INTEGER REFERENCES employees(id),
+      updated_by INTEGER REFERENCES employees(id)
+  );
+
+  CREATE INDEX idx_employees_email ON employees(email);
+  CREATE INDEX idx_employees_active ON employees(is_active);
+
+  -- ============================================
+  -- 勤務形態テーブル
+  -- ============================================
+  CREATE TABLE work_types (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) UNIQUE NOT NULL,
+      calendar_keyword VARCHAR(50) UNIQUE NOT NULL,
+      is_payroll_target BOOLEAN NOT NULL DEFAULT TRUE,
+      rate_type VARCHAR(20) NOT NULL CHECK (rate_type IN ('FIXED', 'STUDENT_LEVEL_BASED')),
+      fixed_wage INTEGER CHECK (fixed_wage IS NULL OR fixed_wage > 0),
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_by INTEGER REFERENCES employees(id),
+      updated_by INTEGER REFERENCES employees(id),
+      CONSTRAINT chk_fixed_wage_when_fixed_type
+          CHECK (rate_type != 'FIXED' OR fixed_wage IS NOT NULL)
+  );
+
+  -- ============================================
+  -- 学校種別テーブル
+  -- ============================================
+  CREATE TABLE student_levels (
+      id SERIAL PRIMARY KEY,
+      level_name VARCHAR(50) UNIQUE NOT NULL,
+      display_order INTEGER NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE UNIQUE INDEX idx_student_levels_order ON student_levels(display_order);
+
+  -- ============================================
+  -- 生徒テーブル
+  -- ============================================
+  CREATE TABLE students (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) UNIQUE NOT NULL,
+      student_level_id INTEGER NOT NULL REFERENCES student_levels(id),
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      notes TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_by INTEGER REFERENCES employees(id),
+      updated_by INTEGER REFERENCES employees(id)
+  );
+
+  CREATE INDEX idx_students_name ON students(name);
+  CREATE INDEX idx_students_level ON students(student_level_id);
+  CREATE INDEX idx_students_active ON students(is_active);
+
+  -- ============================================
+  -- 時給マスタテーブル
+  -- ============================================
+  CREATE TABLE hourly_wages (
+      id SERIAL PRIMARY KEY,
+      work_type_id INTEGER NOT NULL REFERENCES work_types(id),
+      student_level_id INTEGER REFERENCES student_levels(id),
+      wage INTEGER NOT NULL CHECK (wage > 0),
+      effective_from DATE NOT NULL DEFAULT CURRENT_DATE,
+      effective_to DATE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_by INTEGER REFERENCES employees(id),
+      updated_by INTEGER REFERENCES employees(id),
+      CONSTRAINT chk_effective_period CHECK (effective_to IS NULL OR effective_to >=
+effective_from),
+      CONSTRAINT uk_wage_combination UNIQUE (work_type_id, student_level_id, effective_from)
+  );
+
+  CREATE INDEX idx_hourly_wages_lookup ON hourly_wages(work_type_id, student_level_id);
+  CREATE INDEX idx_hourly_wages_effective ON hourly_wages(effective_from, effective_to);
+
+  -- ============================================
+  -- 勤務記録テーブル
+  -- ============================================
+  CREATE TABLE work_records (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER NOT NULL REFERENCES employees(id),
+      google_event_id VARCHAR(255) UNIQUE NOT NULL,
+      event_title VARCHAR(500) NOT NULL,
+      start_time TIMESTAMP NOT NULL,
+      end_time TIMESTAMP NOT NULL,
+      work_type_id INTEGER REFERENCES work_types(id),
+      student_id INTEGER REFERENCES students(id),
+      extracted_student_name VARCHAR(100),  -- カレンダーから抽出した生徒名
+      calculated_minutes INTEGER GENERATED ALWAYS AS (
+          EXTRACT(EPOCH FROM (end_time - start_time)) / 60
+      ) STORED,
+      is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+      paid_at TIMESTAMP,
+      notes TEXT,
+      synced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT chk_time_range CHECK (start_time < end_time),
+      CONSTRAINT chk_reasonable_duration CHECK (
+          EXTRACT(EPOCH FROM (end_time - start_time)) / 3600 <= 12
+      )
+  );
+
+  CREATE INDEX idx_work_records_employee ON work_records(employee_id);
+  CREATE INDEX idx_work_records_employee_time ON work_records(employee_id, start_time);
+  CREATE INDEX idx_work_records_google_event ON work_records(google_event_id);
+  CREATE INDEX idx_work_records_payment ON work_records(employee_id, is_paid, start_time);
+  CREATE INDEX idx_work_records_student ON work_records(student_id);
+  CREATE INDEX idx_work_records_work_type ON work_records(work_type_id);
+
+  -- ============================================
+  -- 給与計算履歴テーブル（監査用）
+  -- ============================================
+  CREATE TABLE payroll_histories (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER NOT NULL REFERENCES employees(id),
+      period_start DATE NOT NULL,
+      period_end DATE NOT NULL,
+      total_work_minutes INTEGER NOT NULL,
+      total_payment INTEGER NOT NULL,
+      payment_details JSONB NOT NULL,
+      calculated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      calculated_by INTEGER NOT NULL REFERENCES employees(id),
+      CONSTRAINT chk_period CHECK (period_start <= period_end)
+  );
+
+  CREATE INDEX idx_payroll_histories_employee ON payroll_histories(employee_id);
+  CREATE INDEX idx_payroll_histories_period ON payroll_histories(period_start, period_end);
+  CREATE INDEX idx_payroll_histories_calculated ON payroll_histories(calculated_at);
+
+  -- ============================================
+  -- 監査ログテーブル
+  -- ============================================
+  CREATE TABLE audit_logs (
+      id BIGSERIAL PRIMARY KEY,
+      table_name VARCHAR(50) NOT NULL,
+      record_id INTEGER NOT NULL,
+      operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+      old_values JSONB,
+      new_values JSONB,
+      changed_by INTEGER REFERENCES employees(id),
+      changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      ip_address INET,
+      user_agent TEXT
+  );
+
+  CREATE INDEX idx_audit_logs_table ON audit_logs(table_name, record_id);
+  CREATE INDEX idx_audit_logs_user ON audit_logs(changed_by);
+  CREATE INDEX idx_audit_logs_time ON audit_logs(changed_at);
+
+  -- ============================================
+  -- バッチジョブ実行履歴テーブル
+  -- ============================================
+  CREATE TABLE batch_job_histories (
+      id BIGSERIAL PRIMARY KEY,
+      job_name VARCHAR(100) NOT NULL,
+      started_at TIMESTAMP NOT NULL,
+      ended_at TIMESTAMP,
+      status VARCHAR(20) NOT NULL CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILURE')),
+      success_count INTEGER DEFAULT 0,
+      failure_count INTEGER DEFAULT 0,
+      error_details JSONB,
+      CONSTRAINT chk_job_duration CHECK (ended_at IS NULL OR ended_at >= started_at)
+  );
+
+  CREATE INDEX idx_batch_jobs_name ON batch_job_histories(job_name);
+  CREATE INDEX idx_batch_jobs_started ON batch_job_histories(started_at);
+  CREATE INDEX idx_batch_jobs_status ON batch_job_histories(status);
+
+  -- ============================================
+  -- トリガー：updated_atの自動更新
+  -- ============================================
+  CREATE OR REPLACE FUNCTION update_updated_at_column()
+  RETURNS TRIGGER AS $
+  BEGIN
+      NEW.updated_at = CURRENT_TIMESTAMP;
+      RETURN NEW;
+  END;
+  $ LANGUAGE plpgsql;
+
+  CREATE TRIGGER update_employees_updated_at BEFORE UPDATE ON employees
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+  CREATE TRIGGER update_work_types_updated_at BEFORE UPDATE ON work_types
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+  CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+  CREATE TRIGGER update_hourly_wages_updated_at BEFORE UPDATE ON hourly_wages
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+  CREATE TRIGGER update_work_records_updated_at BEFORE UPDATE ON work_records
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+  ---
+  7.4. 実装時の推奨技術スタック詳細
+
+  # pom.xml 推奨依存関係
+
+  dependencies:
+    # Spring Boot基本
+    - spring-boot-starter-web:3.2.x
+    - spring-boot-starter-data-jpa:3.2.x
+    - spring-boot-starter-security:3.2.x
+    - spring-boot-starter-oauth2-client:3.2.x
+    - spring-boot-starter-validation:3.2.x
+    - spring-boot-starter-actuator:3.2.x
+
+    # データベース
+    - postgresql:42.7.x
+    - flyway-core:10.x
+
+    # Google API
+    - google-api-client:2.x
+    - google-oauth-client:1.35.x
+    - google-api-services-calendar:v3-rev20231123-2.0.0
+    - google-api-services-sheets:v4-rev20231101-2.0.0
+
+    # JWT
+    - jjwt-api:0.12.x
+    - jjwt-impl:0.12.x
+    - jjwt-jackson:0.12.x
+
+    # 監視・メトリクス
+    - micrometer-registry-prometheus:1.12.x
+
+    # ログ
+    - logstash-logback-encoder:7.4  # JSON形式ログ
+
+    # リトライ
+    - spring-retry:2.0.x
+
+    # キャッシュ（フェーズ2）
+    - spring-boot-starter-data-redis:3.2.x
+
+    # テスト
+    - spring-boot-starter-test:3.2.x
+    - testcontainers:1.19.x
+    - testcontainers-postgresql:1.19.x
+    - rest-assured:5.4.x
+
+    # ユーティリティ
+    - lombok:1.18.x
+    - mapstruct:1.5.x
+
+    # セキュリティ
+    - jasypt-spring-boot-starter:3.0.5  # 暗号化
+
+    # API ドキュメント
+    - springdoc-openapi-starter-webmvc-ui:2.3.x  # Swagger UI
+
+  ---
+  7.5. 次のステップ提案
+
+● 推奨する進め方（段階的アプローチ）
+
+  gantt
+      title 実装ロードマップ
+      dateFormat YYYY-MM-DD
+      section Phase 0: 設計補完
+      設計書の更新（Critical項目）       :crit, 2025-12-30, 7d
+      セキュリティ設計書作成             :crit, 2025-12-30, 5d
+      DB詳細設計書作成                   :crit, 2026-01-02, 5d
+      テスト戦略書作成                   :crit, 2026-01-04, 3d
+
+      section Phase 1: 基盤実装
+      プロジェクトセットアップ           :2026-01-08, 3d
+      DB構築（Flyway migration）         :2026-01-11, 5d
+      認証基盤実装（OAuth + JWT）        :2026-01-16, 7d
+      基本CRUD API実装                   :2026-01-23, 10d
+
+      section Phase 2: コア機能実装
+      Googleカレンダー連携               :2026-02-02, 7d
+      Googleスプレッドシート連携         :2026-02-09, 5d
+      給与計算ロジック実装               :2026-02-14, 10d
+      バッチ処理実装                     :2026-02-24, 7d
+
+      section Phase 3: 品質保証
+      単体テスト実装                     :2026-03-03, 10d
+      統合テスト実装                     :2026-03-13, 7d
+      性能テスト実施                     :2026-03-20, 5d
+      セキュリティテスト実施             :2026-03-25, 5d
+
+      section Phase 4: 本番化準備
+      監視・ログ基盤構築                 :2026-03-30, 5d
+      CI/CDパイプライン構築              :2026-04-04, 5d
+      運用ドキュメント整備               :2026-04-09, 5d
+      本番環境構築                       :2026-04-14, 5d
+      本番リリース                       :milestone, 2026-04-19, 0d
+
+  ---
+  🎯 まとめ
+
+  現在の設計の優れた点
+
+  1. ✅ 明確なスコープ定義: フェーズ分けが適切で、段階的な拡張が可能
+  2. ✅ 妥当な技術選定: Spring Boot、PostgreSQLは実績があり適切
+  3. ✅ レイヤー分離: アーキテクチャの基本構造は良好
+  4. ✅ 要件のID管理: トレーサビリティが確保されている
+
+  Critical な改善必須項目（実装前に対応）
+
+  1. 🔴 データベース設計の完全化:
+    - 監査カラム（created_at, updated_at, created_by, updated_by）の追加
+    - 必須インデックスの定義
+    - 制約条件の明示
+  2. 🔴 セキュリティ設計の詳細化:
+    - RBAC（ロールベースアクセス制御）の実装
+    - トークン管理戦略（JWT保存、リフレッシュ、失効）
+    - データ暗号化（at rest）
+  3. 🔴 エラーハンドリング戦略:
+    - すべてのエラーケースの洗い出し
+    - 標準化されたエラーレスポンス
+    - リトライ・フォールバック戦略
+  4. 🔴 テスト戦略の策定:
+    - 単体・統合・E2Eテストの定義
+    - カバレッジ目標の設定
+  5. 🔴 監査・ログ要件の明確化:
+    - 監査ログの記録対象と保持期間
+    - 構造化ログの形式
+    - 個人情報のマスキング
