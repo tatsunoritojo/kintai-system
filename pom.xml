@@ -13,9 +13,9 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>attendance-management-system</artifactId>
+    <artifactId>kintai-system</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Attendance Management System</name>
+    <name>Kintai System</name>
     <description>勤怠管理システム - Google Calendar/Sheets連携</description>
 
     <properties>

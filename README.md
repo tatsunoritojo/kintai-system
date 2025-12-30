@@ -1,4 +1,4 @@
-# 勤怠管理システム（Attendance Management System）
+# 勤怠管理システム（Kintai System）
 
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
@@ -149,8 +149,8 @@
 ### 1. リポジトリクローン
 
 ```bash
-git clone https://github.com/your-org/attendance-management-system-java.git
-cd attendance-management-system-java
+git clone https://github.com/your-org/kintai-system.git
+cd kintai-system
 ```
 
 ### 2. Docker Composeで起動
@@ -181,7 +181,7 @@ docker-compose down
 ## プロジェクト構成
 
 ```
-attendance-management-system-java/
+kintai-system/
 ├── docs/                           # ドキュメント
 │   ├── 01_requirements/            # 要件定義
 │   │   ├── REQUIREMENTS_DEFINITION.md
@@ -443,8 +443,8 @@ git push origin v1.0.0
 ## 連絡先
 
 - **プロジェクトオーナー**: [Your Name](mailto:your-email@example.com)
-- **イシュー**: [GitHub Issues](https://github.com/your-org/attendance-management-system-java/issues)
-- **ドキュメント**: [GitHub Wiki](https://github.com/your-org/attendance-management-system-java/wiki)
+- **イシュー**: [GitHub Issues](https://github.com/your-org/kintai-system/issues)
+- **ドキュメント**: [GitHub Wiki](https://github.com/your-org/kintai-system/wiki)
 
 ---
 
@@ -457,4 +457,4 @@ git push origin v1.0.0
 
 ---
 
-**© 2025 Attendance Management System. All rights reserved.**
+**© 2025 Kintai System. All rights reserved.**
