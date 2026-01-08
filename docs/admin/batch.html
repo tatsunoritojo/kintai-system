@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バッチ実行 - 勤怠管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html"><i class="fas fa-clock me-2"></i>勤怠管理システム</a>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        <h1 class="page-title"><i class="fas fa-sync-alt me-2"></i>バッチ実行</h1>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-calendar-alt me-2"></i>Google Calendar同期
+                    </div>
+                    <div class="card-body">
+                        <p>Google Calendarから勤務記録を取得し、データベースに同期します。</p>
+                        <div class="mb-3">
+                            <label class="form-label">同期期間</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="date" class="form-control" placeholder="開始日">
+                                </div>
+                                <div class="col-6">
+                                    <input type="date" class="form-control" placeholder="終了日">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100">
+                            <i class="fas fa-sync me-2"></i>同期実行
+                        </button>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small><i class="fas fa-clock me-1"></i>最終実行: 2024-01-15 10:30</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-table me-2"></i>Google Sheets同期
+                    </div>
+                    <div class="card-body">
+                        <p>Google Sheetsから生徒マスタ情報を取得し、データベースに同期します。</p>
+                        <div class="mb-3">
+                            <label class="form-label">シートURL</label>
+                            <input type="text" class="form-control"
+                                placeholder="https://docs.google.com/spreadsheets/...">
+                        </div>
+                        <button class="btn btn-success w-100">
+                            <i class="fas fa-sync me-2"></i>同期実行
+                        </button>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small><i class="fas fa-clock me-1"></i>最終実行: 2024-01-15 09:00</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-history me-2"></i>実行履歴</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>実行日時</th>
+                                <th>バッチ種別</th>
+                                <th>ステータス</th>
+                                <th>処理件数</th>
+                                <th>メッセージ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-01-15 10:30</td>
+                                <td><span class="badge bg-primary">Calendar同期</span></td>
+                                <td><span class="badge bg-success">成功</span></td>
+                                <td>15件</td>
+                                <td>正常に完了しました</td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-15 09:00</td>
+                                <td><span class="badge bg-success">Sheets同期</span></td>
+                                <td><span class="badge bg-success">成功</span></td>
+                                <td>4件</td>
+                                <td>正常に完了しました</td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-14 10:30</td>
+                                <td><span class="badge bg-primary">Calendar同期</span></td>
+                                <td><span class="badge bg-danger">失敗</span></td>
+                                <td>0件</td>
+                                <td>API認証エラー</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

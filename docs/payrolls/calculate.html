@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与計算実行 - 勤怠管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html"><i class="fas fa-clock me-2"></i>勤怠管理システム</a>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        <h1 class="page-title"><i class="fas fa-calculator me-2"></i>給与計算実行</h1>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-cog me-2"></i>計算条件</div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label">対象月 <span class="text-danger">*</span></label>
+                                <input type="month" class="form-control" value="2024-01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">対象従業員</label>
+                                <select class="form-select">
+                                    <option value="">全従業員</option>
+                                    <option>山田太郎</option>
+                                    <option>佐藤花子</option>
+                                    <option>鈴木一郎</option>
+                                </select>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Google Calendarから勤務記録を取得し、単価マスタに基づいて給与を自動計算します。
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success"><i
+                                        class="fas fa-calculator me-2"></i>計算実行</button>
+                                <a href="list.html" class="btn btn-secondary"><i class="fas fa-times me-2"></i>キャンセル</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header"><i class="fas fa-list me-2"></i>計算結果プレビュー</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>従業員</th>
+                                        <th>勤務時間</th>
+                                        <th>給与額</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>山田太郎</td>
+                                        <td>160時間</td>
+                                        <td>¥240,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>佐藤花子</td>
+                                        <td>120時間</td>
+                                        <td>¥180,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>鈴木一郎</td>
+                                        <td>100時間</td>
+                                        <td>¥150,000</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-active">
+                                        <th>合計</th>
+                                        <th>380時間</th>
+                                        <th>¥570,000</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

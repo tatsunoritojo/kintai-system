@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与計算一覧 - 勤怠管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html"><i class="fas fa-clock me-2"></i>勤怠管理システム</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html"><i
+                                class="fas fa-home me-1"></i>ダッシュボード</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="list.html"><i
+                                class="fas fa-dollar-sign me-1"></i>給与計算</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h1 class="page-title"><i class="fas fa-dollar-sign me-2"></i>給与計算一覧</h1>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="calculate.html" class="btn btn-success"><i class="fas fa-calculator me-2"></i>給与計算実行</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>従業員</th>
+                                <th>対象月</th>
+                                <th>勤務時間</th>
+                                <th>勤務日数</th>
+                                <th>給与額</th>
+                                <th>ステータス</th>
+                                <th>計算日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payrollList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/mock-data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tbody = document.getElementById('payrollList');
+            let html = '';
+
+            mockData.payrolls.forEach(payroll => {
+                const statusBadge = getStatusBadgeClass(payroll.status);
+                const statusLabel = getStatusLabel(payroll.status);
+
+                html += `
+                    <tr>
+                        <td><strong>${payroll.employeeName}</strong></td>
+                        <td>${payroll.month}</td>
+                        <td>${payroll.totalWorkHours}時間</td>
+                        <td>${payroll.totalWorkDays}日</td>
+                        <td><strong>${formatCurrency(payroll.totalPayment)}</strong></td>
+                        <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+                        <td>${payroll.calculatedDate}</td>
+                        <td class="action-buttons">
+                            <a href="detail.html?id=${payroll.id}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                            <button class="btn btn-sm btn-outline-success"><i class="fas fa-download"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        });
+    </script>
+</body>
+
+</html>

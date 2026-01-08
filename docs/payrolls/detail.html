@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与詳細 - 勤怠管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html"><i class="fas fa-clock me-2"></i>勤怠管理システム</a>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h1 class="page-title"><i class="fas fa-file-invoice-dollar me-2"></i>給与詳細</h1>
+            </div>
+            <div class="col-md-6 text-end">
+                <button class="btn btn-success"><i class="fas fa-download me-2"></i>PDF出力</button>
+                <a href="list.html" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>一覧に戻る</a>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-info-circle me-2"></i>基本情報</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="text-muted small">従業員名</label>
+                        <div class="h5">山田太郎</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">対象月</label>
+                        <div class="h5">2024年1月</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">ステータス</label>
+                        <div><span class="badge bg-success">支払済</span></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">計算日</label>
+                        <div>2024-01-31</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-chart-bar me-2"></i>集計</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="stats-number">160時間</div>
+                        <div class="stats-label">総勤務時間</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-number">21日</div>
+                        <div class="stats-label">総勤務日数</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-number text-success">¥240,000</div>
+                        <div class="stats-label">総給与額</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-list me-2"></i>勤務記録明細</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>勤務時間</th>
+                                <th>時間数</th>
+                                <th>種別</th>
+                                <th>生徒</th>
+                                <th>単価</th>
+                                <th>給与</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-01-15 (月)</td>
+                                <td>09:00 ~ 18:00</td>
+                                <td>8.0時間</td>
+                                <td>個別指導</td>
+                                <td>生徒A</td>
+                                <td>¥1,500</td>
+                                <td>¥12,000</td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-14 (日)</td>
+                                <td>13:00 ~ 20:00</td>
+                                <td>7.0時間</td>
+                                <td>自習室監督</td>
+                                <td>-</td>
+                                <td>¥1,500</td>
+                                <td>¥10,500</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 - 勤怠管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html"><i class="fas fa-clock me-2"></i>勤怠管理システム</a>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        <h1 class="page-title"><i class="fas fa-cog me-2"></i>設定</h1>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header"><i class="fas fa-user me-2"></i>プロフィール</div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label">氏名</label>
+                                <input type="text" class="form-control" value="山田太郎">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">メールアドレス</label>
+                                <input type="email" class="form-control" value="yamada@example.com" readonly>
+                                <small class="text-muted">メールアドレスは変更できません</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>保存
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header"><i class="fas fa-key me-2"></i>Google連携</div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">Google Calendar</h6>
+                                <small class="text-muted">勤務記録の自動取得</small>
+                            </div>
+                            <span class="badge bg-success">連携中</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">Google Sheets</h6>
+                                <small class="text-muted">生徒マスタの自動取得</small>
+                            </div>
+                            <span class="badge bg-success">連携中</span>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-unlink me-2"></i>連携解除
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-bell me-2"></i>通知設定</div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="notifyCalendarSync" checked>
+                            <label class="form-check-label" for="notifyCalendarSync">
+                                Calendar同期完了時に通知
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="notifyPayroll" checked>
+                            <label class="form-check-label" for="notifyPayroll">
+                                給与計算完了時に通知
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notifyError" checked>
+                            <label class="form-check-label" for="notifyError">
+                                エラー発生時に通知
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-info-circle me-2"></i>システム情報</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">バージョン</label>
+                            <div>v1.0.0</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">最終ログイン</label>
+                            <div>2024-01-15 10:30</div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="text-muted small">ロール</label>
+                            <div><span class="badge bg-danger">管理者</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header bg-danger text-white">
+                        <i class="fas fa-exclamation-triangle me-2"></i>危険な操作
+                    </div>
+                    <div class="card-body">
+                        <p class="small mb-2">アカウントを削除すると、すべてのデータが失われます。</p>
+                        <button class="btn btn-outline-danger btn-sm w-100">
+                            <i class="fas fa-trash me-2"></i>アカウント削除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
